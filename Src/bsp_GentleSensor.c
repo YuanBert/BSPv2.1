@@ -1,6 +1,7 @@
 #include "bsp_GentleSensor.h"
 #include "bsp_Motor.h"
-
+#include "bsp_Log.h"
+extern uint8_t gCloseFlag;
 extern uint8_t gCarEnteredFlag;
 extern GPIOSTRUCT gGentleSensorGpio;
 extern MOTORMACHINE gMotorMachine;
@@ -28,6 +29,7 @@ BSP_StatusTypeDef BSP_GentleSensorCheck(void)
 				gGentleSensorGpio.GpioState = 1;
 				gGentleSensorGpio.FilterCnt = 0;
 				gMotorMachine.GentleSensorFlag = 1;
+				BSP_Log_UpGentleStatus(1);
 			}
 			
 		}
@@ -37,6 +39,8 @@ BSP_StatusTypeDef BSP_GentleSensorCheck(void)
 		if(gGentleSensorGpio.GpioState)
 		{
 			gCarEnteredFlag = 1;
+			gCloseFlag = 0;
+			BSP_Log_UpGentleStatus(0);
 		}
 		gMotorMachine.GentleSensorFlag = 0;
 		gGentleSensorGpio.GpioState = 0;

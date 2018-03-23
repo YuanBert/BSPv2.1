@@ -54,10 +54,10 @@
 extern uint8_t      gComingCarFlag;
 extern AirSensor    gAirSensor;
 extern MOTORMACHINE gMotorMachine;
-extern GPIOSTATUSDETECTION gGentleSensorStatusDetection;
+extern GPIOSTRUCT gGentleSensorGpio;
 extern GPIOSTATUSDETECTION gMCUAIRInputStatusGpio;
 /*关闭道闸定时器标记*/
-extern uint8_t OpenSpeedFlag;
+extern uint8_t gOpenSpeedFlag;
 extern uint8_t gCloseFlag;
 extern uint32_t gCloseTimCnt;
 /*******************************************************************************
@@ -226,7 +226,7 @@ BSP_StatusTypeDef BSP_MotorCheckA(void)
 	if (0 == gMotorMachine.HorizontalRasterState && gMotorMachine.VerticalRasterState)
 	{
 		/* 如果地感或雷达探测到信号时，不关闸 */
-		if (gCloseFlag || gGentleSensorStatusDetection.GpioCheckedFlag)
+		if (gCloseFlag || gMotorMachine.GentleSensorFlag)
 		{
 			return state;
 		}
@@ -278,7 +278,7 @@ BSP_StatusTypeDef BSP_MotorCheckA(void)
 		{
 			/* 遇到地感 雷达 压力波 信号时 停止转动 */
 			//if (gMotorMachine.DigitalAntiSmashingFlag)
-			if (gGentleSensorStatusDetection.GpioCheckedFlag || gAirSensor.CheckedFlag)
+			if (gMotorMachine.GentleSensorFlag || gAirSensor.CheckedFlag)
 			{
 				BSP_MotorStop();
 				gMotorMachine.RunningState = 0;
@@ -336,7 +336,7 @@ BSP_StatusTypeDef BSP_MotorActionA(void)
 		
 		if (UPDIR == gMotorMachine.RunDir && 0 == gMotorMachine.EncounteredFlag)
 		{
-			OpenSpeedFlag = 1;
+			gOpenSpeedFlag = 1;
 		}
 		if (DOWNDIR == gMotorMachine.RunDir)
 		{
@@ -439,7 +439,7 @@ BSP_StatusTypeDef BSP_MotorCheck(void)
 				  BSP_MotorStop();
 				  gMotorMachine.RunningState = 0;
 				  gMotorMachine.OpenFlag = 1;
-				  gGentleSensorStatusDetection.GpioCheckedFlag = 0;
+				  gMotorMachine.GentleSensorFlag = 0;
 				  return state;
 			  }
 		  return state;
@@ -487,7 +487,7 @@ BSP_StatusTypeDef BSP_MotorCheck(void)
           BSP_MotorStop();
           gMotorMachine.RunningState = 0;
           gMotorMachine.OpenFlag = 1;
-          gGentleSensorStatusDetection.GpioCheckedFlag = 0;
+          gMotorMachine.GentleSensorFlag = 0;
           return state;
         }
         return state;

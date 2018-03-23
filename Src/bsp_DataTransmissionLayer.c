@@ -155,7 +155,35 @@ BSP_StatusTypeDef BSP_LeftDoorBoardProtocolInit(void)
   
   return state; 
 }
+/*******************************************************************************
+*
+*       Function        :BSP_SendByteToDriverBoard()
+*
+*       Input           :uint8_t byte, uint32_t timeout
+*
+*       Return          :BSP_StatusTypeDef
+*
+*       Description     :--
+*
+*
+*       Data            :2018/3/23
+*       Author          :bertz
+*******************************************************************************/
 
+BSP_StatusTypeDef BSP_SendByteToDriverBoard(uint8_t byte, uint32_t timeout)
+{
+	BSP_StatusTypeDef state = BSP_OK;
+	uint8_t uByte;
+	uByte = byte;
+	HAL_GPIO_WritePin(CTR485_EN1_GPIO_Port,CTR485_EN1_Pin,GPIO_PIN_SET);
+	state = (BSP_StatusTypeDef)HAL_UART_Transmit(&huart1,&uByte,1,timeout);
+	HAL_GPIO_WritePin(CTR485_EN1_GPIO_Port,CTR485_EN1_Pin,GPIO_PIN_RESET);
+	if(BSP_OK != state)
+	{
+		state = BSP_ERROR;
+	}
+	return state;
+}
 
 /*******************************************************************************
 *

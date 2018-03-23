@@ -1205,10 +1205,19 @@
                 <name>$PROJ_DIR$\..\Src\BSP_DAC5571.c</name>
             </file>
             <file>
+                <name>$PROJ_DIR$\..\Src\bsp_data.c</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\..\Src\bsp_DataTransmissionLayer.c</name>
             </file>
             <file>
                 <name>$PROJ_DIR$\..\Src\bsp_GentleSensor.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Src\bsp_led.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Src\bsp_Log.c</name>
             </file>
             <file>
                 <name>$PROJ_DIR$\..\Src\bsp_motor.c</name>

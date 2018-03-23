@@ -23,6 +23,7 @@ BSP_StatusTypeDef BSP_AirSensorChecked(void)
 			{
 				gAirSensor.CheckedFlag = 1;
 				gAirSensor.FilterCnt = 0;
+				BSP_Log_UpAirSensorStatus(1);
 			}
 		}
 	}
@@ -30,6 +31,7 @@ BSP_StatusTypeDef BSP_AirSensorChecked(void)
 	{
 		gAirSensor.CheckedFlag = 0;
 		gAirSensor.FilterCnt = 0;
+		BSP_Log_UpAirSensorStatus(0);
 	}
 	return state;
 }

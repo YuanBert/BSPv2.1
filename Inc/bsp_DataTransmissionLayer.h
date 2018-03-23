@@ -75,6 +75,7 @@ BSP_StatusTypeDef BSP_DriverBoardProtocolInit(void);
 BSP_StatusTypeDef BSP_LeftDoorBoardProtocolInit(void);
 
 
+BSP_StatusTypeDef BSP_SendByteToDriverBoard(uint8_t byte, uint32_t timeout);
 BSP_StatusTypeDef BSP_SendDataToDriverBoard(uint8_t* pData, uint16_t size, uint32_t Timeout);
 BSP_StatusTypeDef BSP_SendDataToLeftDoorBoard(uint8_t* pData, uint16_t size, uint32_t Timeout);
 

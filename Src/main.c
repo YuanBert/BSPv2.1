@@ -53,6 +53,9 @@
 #include "bsp_AirSensor.h"
 #include "bsp_Common.h"
 #include "bsp_GentleSensor.h"
+#include "BSP_DAC5571.h"
+#include "bsp_led.h"
+#include "bsp_Log.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -64,6 +67,7 @@
 MOTORMACHINE gMotorMachine;
 GPIOSTRUCT gHorGpio;
 GPIOSTRUCT gVerGpio;
+GPIOSTRUCT gOpenBoxGpio;	//开箱检测GPIO
 GPIOSTRUCT gGentleSensorGpio;
 
 uint8_t gRevOpenFlag;	//接收到开闸指令标记位
@@ -76,11 +80,29 @@ uint8_t  Tim4Flag;
 uint16_t Tim5Cnt;
 uint8_t  Tim5Flag;
 
+uint16_t Tim5LedCnt;
+uint8_t  Tim5LedFlag;
+
+uint32_t Tim5LogCnt;
+uint8_t  Tim5LogFlag;
+
 uint32_t Tim5EnterTimeoutSum;//单位为ms
 uint32_t Tim5EnterTimeoutCnt;
 
 uint16_t Tim6Cnt;
 uint8_t  Tim6Flag;
+/* 电流及温度采集 */
+uint32_t gADCBuffer[10];
+uint32_t gIValue;
+uint32_t gTempertureValue;
+
+/* 电机调速 */
+uint8_t  Tim6OpenSpeedCnt;
+uint8_t  Tim6OpenSpeedFlag;
+uint8_t  gOpenSpeedFlag;
+uint16_t gSpeed;
+
+uint8_t gCloseFlag;
 
 extern uint8_t gOpenBControlBuf[300];
 
@@ -150,6 +172,10 @@ int main(void)
   BSP_AirSensorInit(5);
   BSP_GentleSensorInit(5);
   BSP_DriverBoardProtocolInit();
+  BSP_Log_Init(0x12345678);
+
+  BSP_DAC5571_Init(NormalOperationMode);
+  BSP_DAC5571_WriteValue(NormalOperationMode, 100);
   
   gHorGpio.FilterCntSum = 10;
   gVerGpio.FilterCntSum = 10;
@@ -165,13 +191,18 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
+  BSP_HandingUartDataFromDriverBoard();
+  BSP_HandingDriverBoardRequest();
+  BSP_SendAckData();
 
+
+  //检测光栅状态
   if(Tim4Flag)
   {
 	RasterStateCheck();
 	Tim4Flag = 0;
   }
-
+  //检测空气压力传感器以及地感传感器
   if(Tim5Flag)
   {
   	BSP_AirSensorChecked();
@@ -179,8 +210,45 @@ int main(void)
 	Tim5Flag = 0;
   }
 
+  BSP_MotorCheckA();
+  BSP_MotorActionA();
+  
+  //检测车辆是否进出场
   CheckCarEnterFlag();
 
+  /*  开闸调速 */
+  if(Tim6OpenSpeedFlag)
+  {
+	if(gOpenSpeedFlag)
+	{
+		BSP_DAC5571_WriteValue(NormalOperationMode,gOpenBControlBuf[gSpeed]);
+		//调试使用
+		BSP_SendByteToDriverBoard(gOpenBControlBuf[gSpeed], 0xFFFF);
+		gSpeed++;
+		if(gSpeed > 299)
+		{
+			gSpeed = 299;
+		}
+	}
+	else
+	{
+		gSpeed = 0;
+	}
+	Tim6OpenSpeedFlag = 0;
+  }
+	//设置氛围灯
+	if(Tim5LedFlag)
+	{
+		BSP_LEDCheck();
+		Tim5LedFlag = 0;
+	}
+	if(Tim5LogFlag)
+	{
+		Tim5LogFlag = 0;
+		BSP_Log_WriteFlag();
+	}
+	//检测上报日志信息
+	BSP_Log_CheckReportInfo();
   }
   /* USER CODE END 3 */
 
@@ -299,19 +367,39 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim)
 		if(gRevOpenFlag)
 		{
 			Tim5EnterTimeoutCnt ++;
+			gCloseFlag = 1;
 			if(Tim5EnterTimeoutCnt > Tim5EnterTimeoutSum)
 			{
 				gRevOpenFlag = 0;
 				gEnterTimeoutFlag = 1;
 				Tim5EnterTimeoutCnt = 0;
 				/* 写关闸操作 */
+				gCloseFlag = 0;
 			}
+		}
+		Tim5LedCnt++;
+		if(Tim5LedCnt > 200)
+		{
+			Tim5LedFlag = 1;
+			Tim5LedCnt = 0;
+		}
+
+		Tim5LogCnt++;
+		if(Tim5LogCnt > 10000)
+		{
+			Tim5LogFlag = 1;
+			Tim5LogCnt = 0;
 		}
 	}
 
 	if(htim6.Instance == htim->Instance)
 	{
-		
+		Tim6OpenSpeedCnt++;
+		if(Tim6OpenSpeedCnt > 1)
+		{
+			Tim6OpenSpeedCnt = 0;
+			Tim6OpenSpeedFlag = 1;
+		}
 	}
 }
 
@@ -338,6 +426,7 @@ static void RasterStateCheck(void)
 				}
 				if(1 == gCarEnteredFlag)
 				{
+					gRevOpenFlag = 0;
 					gCarEnteredFlag = 2;
 				}
 			}
@@ -362,6 +451,11 @@ static void RasterStateCheck(void)
 				gMotorMachine.RunDir = DOWNDIR;
 				gMotorMachine.RunningState = 0;
 				BSP_MotorStop();
+				if(gMotorMachine.EncounteredFlag)
+				{
+					gMotorMachine.EncounteredFlag = 0;
+					Tim5EnterTimeoutCnt = 0;
+				}
 			}	
 		}	
 	}
@@ -375,7 +469,6 @@ static void RasterStateCheck(void)
 
 void CheckCarEnterFlag(void)
 {
-	uint8_t i = 0;
 	uint8_t pData[7];
 	pData[0] = 0x5B;
 	pData[1] = 0xE3;
@@ -390,7 +483,7 @@ void CheckCarEnterFlag(void)
 		gCarEnteredFlag = 0;
 
 		/*数据发送*/
-
+		BSP_SendDataToDriverBoard(pData,7,0xFFFF);
 		return;
 	}
 
@@ -401,7 +494,7 @@ void CheckCarEnterFlag(void)
 		gEnterTimeoutFlag = 0;
 
 		/*数据发送*/
-
+		BSP_SendDataToDriverBoard(pData,7,0xFFFF);
 		return;
 	}
 	
