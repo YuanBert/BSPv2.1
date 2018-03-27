@@ -1226,6 +1226,9 @@
                 <name>$PROJ_DIR$\..\Src\bsp_ProtocolLayer.c</name>
             </file>
             <file>
+                <name>$PROJ_DIR$\..\Src\bsp_wrieless.c</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\..\Src\dma.c</name>
             </file>
             <file>

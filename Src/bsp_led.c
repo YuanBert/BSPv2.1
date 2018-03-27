@@ -279,7 +279,7 @@ extern uint8_t gRevOpenFlag;
     
     void BSP_LEDCheck(void)
     {
-	   if (gRevOpenFlag)
+      if (gRevOpenFlag)
       {
 		if(gMotorMachine.GentleSensorFlag)
 		{

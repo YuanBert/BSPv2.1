@@ -69,27 +69,45 @@ BSP_StatusTypeDef  BSP_Log_UpMotorStatus(uint8_t motorStatus)
 BSP_StatusTypeDef  BSP_Log_UpOpenMode(uint8_t openMode)
 {
 	BSP_StatusTypeDef state = BSP_OK;
-	DoorBoardInfo[11] = openMode;
-	DataChangedFlag = 1;
+        if(DoorBoardInfo[11] != openMode)
+        {
+          DoorBoardInfo[11] = openMode;
+          DataChangedFlag = 1;
+        }
+        else
+        {
+          DataChangedFlag = 0;
+        }
+        
+	
 	return state;
 }
 BSP_StatusTypeDef  BSP_Log_UpGentleStatus(uint8_t status)
 {
 	BSP_StatusTypeDef state = BSP_OK;
-	DoorBoardInfo[12] = status;
-	if(status)
+	if(1 == status)
 	{
-		DataChangedFlag = 1;
+        DoorBoardInfo[12] = status;
+	    DataChangedFlag = 1;
+	}
+	else
+	{
+		 DoorBoardInfo[12]  = 0;
 	}
 	return state;
 }
 BSP_StatusTypeDef  BSP_Log_UpAirSensorStatus(uint8_t status)
 {
 	BSP_StatusTypeDef state = BSP_OK;
-	DoorBoardInfo[13] = status;
-	if(status)
+	
+	if(1 == status)
 	{
-		DataChangedFlag = 1;
+          DoorBoardInfo[13] = status;
+          DataChangedFlag = 1;
+	}
+	else
+	{
+	 DoorBoardInfo[13] = 0;
 	}
 	return state;
 }

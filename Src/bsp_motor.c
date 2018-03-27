@@ -60,6 +60,9 @@ extern GPIOSTATUSDETECTION gMCUAIRInputStatusGpio;
 extern uint8_t gOpenSpeedFlag;
 extern uint8_t gCloseFlag;
 extern uint32_t gCloseTimCnt;
+
+extern uint8_t gWrielessActionFlag;
+extern uint8_t gWrielessModeFlag;
 /*******************************************************************************
 *
 *       Function        :BSP_MotorInit()
@@ -221,6 +224,15 @@ BSP_StatusTypeDef BSP_MotorCheckA(void)
 		state = BSP_ERROR;
 		return state;	
 	}
+        
+        if(1 == gWrielessModeFlag)
+        {
+			gMotorMachine.StartFlag = 0;
+			if(3 != gWrielessActionFlag)
+            {
+                return state;
+             }
+        }
 	
 	//ÔÚ´¹Ö±Î»ÖÃ
 	if (0 == gMotorMachine.HorizontalRasterState && gMotorMachine.VerticalRasterState)

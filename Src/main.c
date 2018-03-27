@@ -56,6 +56,7 @@
 #include "BSP_DAC5571.h"
 #include "bsp_led.h"
 #include "bsp_Log.h"
+#include "bsp_wrieless.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -69,6 +70,9 @@ GPIOSTRUCT gHorGpio;
 GPIOSTRUCT gVerGpio;
 GPIOSTRUCT gOpenBoxGpio;	//开箱检测GPIO
 GPIOSTRUCT gGentleSensorGpio;
+
+uint8_t gWrielessActionFlag;
+uint8_t gWrielessModeFlag;
 
 uint8_t gRevOpenFlag;	//接收到开闸指令标记位
 uint8_t gEnterTimeoutFlag;//出入场超时标记
@@ -169,16 +173,18 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim6);	//
 
   BSP_MotorInit();
+  BSP_WirelessInit(20);
   BSP_AirSensorInit(5);
   BSP_GentleSensorInit(5);
   BSP_DriverBoardProtocolInit();
   BSP_Log_Init(0x12345678);
+ 
 
   BSP_DAC5571_Init(NormalOperationMode);
   BSP_DAC5571_WriteValue(NormalOperationMode, 100);
   
-  gHorGpio.FilterCntSum = 10;
-  gVerGpio.FilterCntSum = 10;
+  gHorGpio.FilterCntSum = 15;
+  gVerGpio.FilterCntSum = 15;
   Tim5EnterTimeoutSum = 15000; //15s
 
   /* USER CODE END 2 */
@@ -207,6 +213,9 @@ int main(void)
   {
   	BSP_AirSensorChecked();
 	BSP_GentleSensorCheck();
+
+	BSP_WirelessCheck();
+	BSP_WirelessAction();
 	Tim5Flag = 0;
   }
 
@@ -234,14 +243,15 @@ int main(void)
 	{
 		gSpeed = 0;
 	}
+	
 	Tim6OpenSpeedFlag = 0;
   }
-	//设置氛围灯
-	if(Tim5LedFlag)
-	{
-		BSP_LEDCheck();
-		Tim5LedFlag = 0;
-	}
+		//设置氛围灯
+  if(Tim5LedFlag)
+  {
+	BSP_LEDCheck();
+	Tim5LedFlag = 0;
+  }
 	if(Tim5LogFlag)
 	{
 		Tim5LogFlag = 0;
@@ -419,6 +429,12 @@ static void RasterStateCheck(void)
 			{
 				gMotorMachine.RunDir = UPDIR;
 				gMotorMachine.RunningState = 0;
+				
+                if(gWrielessModeFlag)
+                {
+                    gWrielessModeFlag = 0;
+                    gWrielessActionFlag = 0;
+                }			
 				BSP_MotorStop();
 				if(1 == gEnterTimeoutFlag)
 				{
@@ -451,6 +467,8 @@ static void RasterStateCheck(void)
 				gMotorMachine.RunDir = DOWNDIR;
 				gMotorMachine.RunningState = 0;
 				BSP_MotorStop();
+				gOpenSpeedFlag = 0;
+				gWrielessActionFlag = 0;
 				if(gMotorMachine.EncounteredFlag)
 				{
 					gMotorMachine.EncounteredFlag = 0;
