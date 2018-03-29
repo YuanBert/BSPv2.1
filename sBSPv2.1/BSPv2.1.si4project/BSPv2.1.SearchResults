@@ -1,1 +1,3 @@
----- BSP_MotorStop Matches (0 in 0 files) ----
+---- gCloseFlag Matches (2 in 0 files) ----
+bsp_motor.c (E:\Users\bertz\Documents\GitHub\BSPv2.1\Src) line 61 : extern uint8_t gCloseFlag;
+BSP_MotorCheckA in bsp_motor.c (E:\Users\bertz\Documents\GitHub\BSPv2.1\Src) : 		if (gCloseFlag || gMotorMachine.GentleSensorFlag)

@@ -185,7 +185,7 @@ int main(void)
   
   gHorGpio.FilterCntSum = 15;
   gVerGpio.FilterCntSum = 15;
-  Tim5EnterTimeoutSum = 4000; //4s
+  Tim5EnterTimeoutSum = 15000; //15s
 
   /* USER CODE END 2 */
 
@@ -377,19 +377,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim)
 		if(gRevOpenFlag)
 		{
 			Tim5EnterTimeoutCnt ++;
-			if(0 == gCarEnteredFlag)
-			{
-				gCloseFlag = 1;
-			}
-			//在定时的时间内车辆出入场
-			if(1 == gMotorMachine.GentleSensorFlag)
-			{
-				//gRevOpenFlag = 0;
-				gCarEnteredFlag = 1;
-				//写关闸
-				gCloseFlag = 0;
-			}
-			
+			gCloseFlag = 1;
 			if(Tim5EnterTimeoutCnt > Tim5EnterTimeoutSum)
 			{
 				gRevOpenFlag = 0;
@@ -399,11 +387,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim)
 				gCloseFlag = 0;
 			}
 		}
-		else
-		{
-			gCloseFlag = 0;
-		}
-		
 		Tim5LedCnt++;
 		if(Tim5LedCnt > 200)
 		{
@@ -444,7 +427,6 @@ static void RasterStateCheck(void)
 			gHorGpio.FilterCnt = 0;
 			if(DOWNDIR == gMotorMachine.RunDir)
 			{
-				BSP_MotorStop();
 				gMotorMachine.RunDir = UPDIR;
 				gMotorMachine.RunningState = 0;
 				
@@ -453,7 +435,7 @@ static void RasterStateCheck(void)
                     gWrielessModeFlag = 0;
                     gWrielessActionFlag = 0;
                 }			
-				
+				BSP_MotorStop();
 				if(1 == gEnterTimeoutFlag)
 				{
 					gEnterTimeoutFlag = 2;
@@ -473,7 +455,7 @@ static void RasterStateCheck(void)
 	}
 	gHorGpio.LastReadVal = gHorGpio.CurrentReadVal;
 
-	if(0 == gVerGpio.CurrentReadVal && 0 == gVerGpio.LastReadVal)
+	if(0 == gVerGpio.CurrentReadVal &&0 == gVerGpio.LastReadVal)
 	{
 		gVerGpio.FilterCnt ++;
 		if(gVerGpio.FilterCnt > gVerGpio.FilterCntSum)
@@ -487,10 +469,9 @@ static void RasterStateCheck(void)
 				BSP_MotorStop();
 				gOpenSpeedFlag = 0;
 				gWrielessActionFlag = 0;
-				if(1 == gMotorMachine.EncounteredFlag)
+				if(gMotorMachine.EncounteredFlag)
 				{
 					gMotorMachine.EncounteredFlag = 0;
-					gRevOpenFlag = 1;
 					Tim5EnterTimeoutCnt = 0;
 				}
 			}	
@@ -512,14 +493,6 @@ void CheckCarEnterFlag(void)
 	pData[3] = 0x00;
 	pData[4] = 0x00;
 	pData[6] = 0x5D;
-
-	//停车在开闸处超时
-	if(2 == gCarEnteredFlag && 2 == gEnterTimeoutFlag)
-	{
-		gCarEnteredFlag = 0;
-		gEnterTimeoutFlag = 0;
-		return;
-	}
 
 	if(2 == gCarEnteredFlag)
 	{
