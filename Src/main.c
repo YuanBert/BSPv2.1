@@ -185,7 +185,7 @@ int main(void)
   
   gHorGpio.FilterCntSum = 15;
   gVerGpio.FilterCntSum = 15;
-  Tim5EnterTimeoutSum = 4000; //4s
+  Tim5EnterTimeoutSum = 10000; //4s
 
   /* USER CODE END 2 */
 
@@ -514,12 +514,12 @@ void CheckCarEnterFlag(void)
 	pData[6] = 0x5D;
 
 	//停车在开闸处超时
-	if(2 == gCarEnteredFlag && 2 == gEnterTimeoutFlag)
-	{
-		gCarEnteredFlag = 0;
-		gEnterTimeoutFlag = 0;
-		return;
-	}
+	//if(2 == gCarEnteredFlag && 2 == gEnterTimeoutFlag)
+	//{
+	//	gCarEnteredFlag = 0;
+                //gEnterTimeoutFlag = 0;
+	//	return;
+	//}
 
 	if(2 == gCarEnteredFlag)
 	{
